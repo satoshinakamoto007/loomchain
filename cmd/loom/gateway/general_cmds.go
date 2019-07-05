@@ -587,7 +587,7 @@ func newWithdrawFundsToMainnetCommand() *cobra.Command {
 }
 
 func newCreateSignedWithdrawalReceipt() *cobra.Command {
-	var ethPrivateKeyPath, amountStr, mainnetGatewayAddr, withdrawerAddr string
+	var ethPrivateKeyPath, amountStr, mainnetGatewayAddr, withdrawerAddr, mainnetTokenAddr string
 	var nonce int
 	cmd := &cobra.Command{
 		Use:     "create-signed-withdrawal-receipt",
@@ -599,7 +599,10 @@ func newCreateSignedWithdrawalReceipt() *cobra.Command {
 				return errors.Wrap(err, "failed to load Ethereum private key")
 			}
 			amount, _ := big.NewInt(0).SetString(amountStr, 10)
-			hash := ssha.SoliditySHA3(ssha.Uint256(amount))
+			hash := ssha.SoliditySHA3(
+				ssha.Uint256(amount),
+				ssha.Address(common.HexToAddress(mainnetTokenAddr)),
+			)
 			hash = ssha.SoliditySHA3(
 				ssha.Address(common.HexToAddress(withdrawerAddr)),
 				ssha.Uint256(new(big.Int).SetUint64(uint64(nonce))),
@@ -634,6 +637,7 @@ func newCreateSignedWithdrawalReceipt() *cobra.Command {
 	cmdFlags.IntVar(&nonce, "nonce", 0, "Withdrawal nonce")
 	cmdFlags.StringVar(&mainnetGatewayAddr, "mainnet-gateway", "0xe080079ac12521d57573f39543e1725ea3e16dcc", "Address of Ethereum Gateway to withdraw from")
 	cmdFlags.StringVar(&withdrawerAddr, "withdrawer", "", "Ethereum address of account to withdraw to")
+	cmdFlags.StringVar(&mainnetTokenAddr, "token", "", "Ethereum token contract address")
 	return cmd
 }
 
